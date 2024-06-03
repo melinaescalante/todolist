@@ -34,24 +34,24 @@ radioInput.forEach(radio => {
         if (e.target.value === "True") {
             // Crea un nuevo div
             let div = document.createElement("div");
-            
+
             let p = document.createElement("p");
             p.innerText = "Inserte fecha límite";
             p.setAttribute("class", "mt-3")
-            
+
             let fecha = document.createElement("input");
             fecha.setAttribute("type", "datetime-local");
             fecha.setAttribute("id", "datetime");
             fecha.setAttribute("name", "datetime");
             fecha.setAttribute("class", "form-control  mb-3");
-            
+
             div.appendChild(p);
             div.appendChild(fecha);
             radioDivTrue.insertAdjacentElement("afterend", div);
             valorRadio = true
             existingDiv = div;
             return valorRadio
-            
+
         }
     })
 });
@@ -69,30 +69,31 @@ form.addEventListener('submit', (e) => {
         imgFileName = file.name;
 
     }
-    
+
     const recordatorio = {
-        _id: idRandom,
+        _id:idRandom,
         fecha: fecha,
-        fechaLimite: fechaMax? fechaMax: "Sin fecha límite",
+        fechaLimite: fechaMax ? fechaMax : "Sin fecha límite",
         body: body,
-        importanceType:valorRadio? "True": "False",
+        importanceType: valorRadio ? "True" : "False",
         img: imgFileName,
-        
+
     };
     db.put(recordatorio).then(resp => {
         console.log(resp)
     }).catch(error => {
-        alert('Ocurrio un error');
+
         console.error(error)
     })
-
+    
     recordatorios.push(recordatorio);
+
 
     inputTarea.value = '';
     console.log(recordatorios);
     renderizarRecordatorios(recordatorios)
 })
-
+let btns
 // Funcion 2 - Recibe un array y los renderiza las notas
 const renderizarRecordatorios = (lista) => {
     // Limpio el contenedor
@@ -121,38 +122,64 @@ const renderizarRecordatorios = (lista) => {
                     </div>
                 </div>
 
-                <button id="${index}" class="btn btn-danger btn-delete" type="button">
+                <button id="${index}" data-id2="${recordatorio._id}" class="btn btn-danger btn-delete" type="button">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
         </li>`;
     });
 
-    const btns = document.querySelectorAll('.btn-delete');
+    btns = document.querySelectorAll('.btn-delete');
+console.log(btns)
     btns.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            const id = e.target.id;
-            deleteRecordatorio(id);
+            const id = e.target.id;        
+            let id2 = e.target.dataset.id2;   
+            deleteRecordatorio(id,id2);
         })
     });
 }
 
+let datosViejos
+let datosDB
 // Funcion 3 - Lee las notas del indexedDB
 const getNotas = async () => {
-    db.allDocs({ include_docs: true, descending: true }).then(docs => {
-        console.log(docs.rows);
-      
-    })
+    try {
+        const result = await db.allDocs({ include_docs: true, descending: true });
+        datosViejos = result.rows.map(row => row.doc);  // Extrae todos los documentos en un array
+        // console.log(result.rows);
+        datosDB = result.rows
+        console.log(datosDB)
+        datosViejos.forEach(element => {
+            recordatorios.push(element)
+
+        });
+
+
+        renderizarRecordatorios(datosViejos);
+    } catch (error) {
+        console.error('Error al obtener las notas:', error);
+    }
 }
 
 // Funcion 4 - Elimina un Nota
-const deleteRecordatorio = (index) => {
-    console.log(index);
-    // Elimino localmente
-    recordatorios.splice(index, 1);
-    console.log(recordatorios);
-    // Actualización
-    renderizarRecordatorios(recordatorios);
+const deleteRecordatorio = async (index,id2) => {
+    try {
+        let item = datosDB
+         deleteButtonPressed(item,id2)
+
+            recordatorios.splice(index, 1);
+            renderizarRecordatorios(recordatorios);
+ 
+    } catch (error) {
+        console.error(error)
+    }
+}
+function deleteButtonPressed(item,id2) {
+
+    let itemToDelete = item.find(i => i.id === id2);
+    db.remove(itemToDelete)
+
 }
 
 const renderError = (msg) => {
@@ -164,24 +191,24 @@ const renderError = (msg) => {
 getNotas();
 // Funcion de mozilla para previsualizar
 function previewFile() {
-  const preview = document.querySelector("img");
-  file = document.querySelector("input[type=file]").files[0];
-  const reader = new FileReader();
+    const preview = document.querySelector("img");
+    file = document.querySelector("input[type=file]").files[0];
+    const reader = new FileReader();
 
-  reader.addEventListener(
-    "load",
-    function () {
-      // convierte la imagen a una cadena en base64
-      preview.src = reader.result;
-      preview.hidden = false;
-    },
-    false,
-  );
+    reader.addEventListener(
+        "load",
+        function () {
+            // convierte la imagen a una cadena en base64
+            preview.src = reader.result;
+            preview.hidden = false;
+        },
+        false,
+    );
 
-  if (file) {
-    reader.readAsDataURL(file);
-    console.log(file)
-  }
+    if (file) {
+        reader.readAsDataURL(file);
+        console.log(file)
+    }
 }
 
 

@@ -18,3 +18,10 @@ footer {
 h1{
     font-size: 1.5rem;
 }
+button.btn .btn-danger .btn-delete{
+background-image: url(images/trash.png)!important;
+background-position: center;
+background-repeat: no-repeat;
+background-size: cover;
+
+}
