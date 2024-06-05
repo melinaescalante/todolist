@@ -1,105 +1,104 @@
-const db = new PouchDB('recordatorios');
+const db = new PouchDB("recordatorios");
 
 // Selecciono los elementos
-const inputTarea = document.querySelector('#tarea');
+const inputTarea = document.querySelector("#tarea");
 
-const form = document.querySelector('form');
+const form = document.querySelector("form");
 
-const listaRecordatorios = document.querySelector('#recordatorios');
+const listaRecordatorios = document.querySelector("#recordatorios");
 
-let radioInput = document.querySelectorAll('input[name="importance"]')
+let radioInput = document.querySelectorAll('input[name="importance"]');
 
-let radioDivTrue = document.querySelector(".divRadioTrue")
+let radioDivTrue = document.querySelector(".divRadioTrue");
 
-let radioDivFalse = document.querySelector(".divRadioFalse")
+let radioDivFalse = document.querySelector(".divRadioFalse");
 
 let recordatorios = [];
-let imgReference = document.getElementById("#img_reference")
-let file
+let imgReference = document.getElementById("#img_reference");
+let file;
 
 // Funcion que depende que radio pone se crea otro campo
 let existingDiv = null;
-let valorRadio = null
+let valorRadio = null;
 
-radioInput.forEach(radio => {
-    radio.addEventListener('change', (e) => {
-        // Elimina el div existente si hay uno
-        if (existingDiv) {
-            existingDiv.remove();
-            existingDiv = null;
-            valorRadio = false
-            return valorRadio
-        }
-
-        if (e.target.value === "True") {
-            // Crea un nuevo div
-            let div = document.createElement("div");
-
-            let p = document.createElement("p");
-            p.innerText = "Inserte fecha límite";
-            p.setAttribute("class", "mt-3")
-
-            let fecha = document.createElement("input");
-            fecha.setAttribute("type", "datetime-local");
-            fecha.setAttribute("id", "datetime");
-            fecha.setAttribute("name", "datetime");
-            fecha.setAttribute("class", "form-control  mb-3");
-
-            div.appendChild(p);
-            div.appendChild(fecha);
-            radioDivTrue.insertAdjacentElement("afterend", div);
-            valorRadio = true
-            existingDiv = div;
-            return valorRadio
-
-        }
-    })
-});
-// Funcion 1 - Leer los inputs y los pushea en array contactos
-form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    let fechaMax = document.getElementById('datetime') ? document.getElementById('datetime').value : "Sin fecha límite";
-
-    const body = inputTarea.value;
-    const fecha = new Date().toLocaleDateString();
-    const idRandom = crypto.randomUUID();
-    let imgFileName
-    // Si se seleccionó un archivo de imagen
-    if (file) {
-        imgFileName = file.name;
-
+radioInput.forEach((radio) => {
+  radio.addEventListener("change", (e) => {
+    // Elimina el div existente si hay uno
+    if (existingDiv) {
+      existingDiv.remove();
+      existingDiv = null;
+      valorRadio = false;
+      return valorRadio;
     }
 
-    const recordatorio = {
-        _id:idRandom,
-        fecha: fecha,
-        fechaLimite: fechaMax ? fechaMax : "Sin fecha límite",
-        body: body,
-        importanceType: valorRadio ? "True" : "False",
-        img: imgFileName,
+    if (e.target.value === "True") {
+      // Crea un nuevo div
+      let div = document.createElement("div");
 
-    };
-    db.put(recordatorio).then(resp => {
-        console.log(resp)
-    }).catch(error => {
+      let p = document.createElement("p");
+      p.innerText = "Inserte fecha límite";
+      p.setAttribute("class", "mt-3");
 
-        console.error(error)
+      let fecha = document.createElement("input");
+      fecha.setAttribute("type", "datetime-local");
+      fecha.setAttribute("id", "datetime");
+      fecha.setAttribute("name", "datetime");
+      fecha.setAttribute("class", "form-control  mb-3");
+
+      div.appendChild(p);
+      div.appendChild(fecha);
+      radioDivTrue.insertAdjacentElement("afterend", div);
+      valorRadio = true;
+      existingDiv = div;
+      return valorRadio;
+    }
+  });
+});
+// Funcion 1 - Leer los inputs y los pushea en array contactos
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  let fechaMax = document.getElementById("datetime")
+    ? document.getElementById("datetime").value
+    : "Sin fecha límite";
+
+  const body = inputTarea.value;
+  const fecha = new Date().toLocaleDateString();
+  const idRandom = crypto.randomUUID();
+  let imgFileName;
+  // Si se seleccionó un archivo de imagen
+  if (file) {
+    imgFileName = file.name;
+  }
+
+  const recordatorio = {
+    _id: idRandom,
+    fecha: fecha,
+    fechaLimite: fechaMax ? fechaMax : "Sin fecha límite",
+    body: body,
+    importanceType: valorRadio ? "True" : "False",
+    img: imgFileName,
+  };
+  db.put(recordatorio)
+    .then((resp) => {
+      console.log(resp);
     })
-    
-    recordatorios.push(recordatorio);
+    .catch((error) => {
+      console.error(error);
+    });
 
+  recordatorios.push(recordatorio);
 
-    inputTarea.value = '';
-    console.log(recordatorios);
-    renderizarRecordatorios(recordatorios)
-})
-let btns
+  inputTarea.value = "";
+  console.log(recordatorios);
+  renderizarRecordatorios(recordatorios);
+});
+let btns;
 // Funcion 2 - Recibe un array y los renderiza las notas
 const renderizarRecordatorios = (lista) => {
-    // Limpio el contenedor
-    listaRecordatorios.innerHTML = '';
-    lista.forEach((recordatorio, index) => {
-        listaRecordatorios.innerHTML += `
+  // Limpio el contenedor
+  listaRecordatorios.innerHTML = "";
+  lista.forEach((recordatorio, index) => {
+    listaRecordatorios.innerHTML += `
         <li class="list-group-item">
             <div class="d-flex justify-content-between">
                 <div>
@@ -127,89 +126,80 @@ const renderizarRecordatorios = (lista) => {
                 </button>
             </div>
         </li>`;
-    });
+  });
 
-    btns = document.querySelectorAll('.btn-delete');
-console.log(btns)
-    btns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const id = e.target.id;        
-            let id2 = e.target.dataset.id2;   
-            deleteRecordatorio(id,id2);
-        })
+  btns = document.querySelectorAll(".btn-delete");
+  console.log(btns);
+  btns.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const id = e.target.id;
+      let id2 = e.target.dataset.id2;
+      deleteRecordatorio(id, id2);
     });
-}
+  });
+};
 
-let datosViejos
-let datosDB
+let datosViejos;
+let datosDB;
 // Funcion 3 - Lee las notas del indexedDB
 const getNotas = async () => {
-    try {
-        const result = await db.allDocs({ include_docs: true, descending: true });
-        datosViejos = result.rows.map(row => row.doc);  // Extrae todos los documentos en un array
-        // console.log(result.rows);
-        datosDB = result.rows
-        console.log(datosDB)
-        datosViejos.forEach(element => {
-            recordatorios.push(element)
+  try {
+    const result = await db.allDocs({ include_docs: true, descending: true });
+    datosViejos = result.rows.map((row) => row.doc); // Extrae todos los documentos en un array
+    // console.log(result.rows);
+    datosDB = result.rows;
+    console.log(datosDB);
+    datosViejos.forEach((element) => {
+      recordatorios.push(element);
+    });
 
-        });
-
-
-        renderizarRecordatorios(datosViejos);
-    } catch (error) {
-        console.error('Error al obtener las notas:', error);
-    }
-}
+    renderizarRecordatorios(datosViejos);
+  } catch (error) {
+    console.error("Error al obtener las notas:", error);
+  }
+};
 
 // Funcion 4 - Elimina un Nota
-const deleteRecordatorio = async (index,id2) => {
-    try {
-        let item = datosDB
-         deleteButtonPressed(item,id2)
+const deleteRecordatorio = async (index, id2) => {
+  try {
+    let item = datosDB;
+    deleteButtonPressed(item, id2);
 
-            recordatorios.splice(index, 1);
-            renderizarRecordatorios(recordatorios);
- 
-    } catch (error) {
-        console.error(error)
-    }
-}
-function deleteButtonPressed(item,id2) {
-
-    let itemToDelete = item.find(i => i.id === id2);
-    db.remove(itemToDelete)
-
+    recordatorios.splice(index, 1);
+    renderizarRecordatorios(recordatorios);
+  } catch (error) {
+    console.error(error);
+  }
+};
+function deleteButtonPressed(item, id2) {
+  let itemToDelete = item.find((i) => i.id === id2);
+  db.remove(itemToDelete);
 }
 
 const renderError = (msg) => {
-    listNotas.innerHTML =
-        `<div class="alert alert-warning" role="alert">
+  listNotas.innerHTML = `<div class="alert alert-warning" role="alert">
                 ${msg}
-    </div>`
-}
+    </div>`;
+};
 getNotas();
 // Funcion de mozilla para previsualizar
 function previewFile() {
-    const preview = document.querySelector("img");
-    file = document.querySelector("input[type=file]").files[0];
-    const reader = new FileReader();
+  const preview = document.querySelector("img");
+  file = document.querySelector("input[type=file]").files[0];
+  const reader = new FileReader();
 
-    reader.addEventListener(
-        "load",
-        function () {
-            // convierte la imagen a una cadena en base64
-            preview.src = reader.result;
-            preview.hidden = false;
-        },
-        false,
-    );
+  reader.addEventListener(
+    "load",
+    function () {
+      // convierte la imagen a una cadena en base64
+      preview.src = reader.result;
+      preview.hidden = false;
+    },
+    false
+  );
 
-    if (file) {
-        reader.readAsDataURL(file);
-        console.log(file)
-    }
+  if (file) {
+    reader.readAsDataURL(file);
+    console.log(file);
+  }
 }
-
-
-
