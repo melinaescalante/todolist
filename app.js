@@ -103,17 +103,19 @@ const renderizarRecordatorios = (lista) => {
             <div class="d-flex justify-content-between">
                 <div>
                     <span>
-                        <i class="fa-solid fa-calendar text-primary"></i>
+                        <i class="fa-solid fa-calendar"></i>
                         <strong> ${recordatorio.fecha}</strong>
                     </span>
                     <br>
                     <div>
-                        <i class="fa-solid fa-mobile-screen text-success"></i> ${recordatorio.body}
+                    <i class="fa-regular fa-file-lines"></i> ${recordatorio.body}
                     </div>
                     <div>
+                    <i class="fa-solid fa-camera"></i>
                         ${recordatorio.img}
                     </div>
                     <div>
+                    <i class="fa-solid fa-calendar text-danger"></i>
                         ${recordatorio.fechaLimite}
                     </div>
                     <div>
@@ -122,7 +124,7 @@ const renderizarRecordatorios = (lista) => {
                 </div>
 
                 <button id="${index}" data-id2="${recordatorio._id}" class="btn btn-danger btn-delete" type="button">
-                    <i class="fa-solid fa-trash"></i>
+                    X
                 </button>
             </div>
         </li>`;
@@ -160,20 +162,19 @@ const getNotas = async () => {
 };
 
 // Funcion 4 - Elimina un Nota
-const deleteRecordatorio = async (index, id2) => {
+const deleteRecordatorio = (index, id2) => {
   try {
-    let item = datosDB;
-    deleteButtonPressed(item, id2);
-
+    let id = recordatorios[index]._id;
+    deleteObject(id);
     recordatorios.splice(index, 1);
     renderizarRecordatorios(recordatorios);
   } catch (error) {
     console.error(error);
   }
 };
-function deleteButtonPressed(item, id2) {
-  let itemToDelete = item.find((i) => i.id === id2);
-  db.remove(itemToDelete);
+const deleteObject = async (id) => {
+  const doc = await db.get(id);
+  await db.remove(doc);
 }
 
 const renderError = (msg) => {
