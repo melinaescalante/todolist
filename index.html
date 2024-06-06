@@ -21,7 +21,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="js/manifest.json" />
     <meta name="msapplication-TileColor" content="#ffffff" />
     <meta name="msapplication-TileImage" content="/ms-icon-144x144.png" />
     <meta name="theme-color" content="#ffffff" />
@@ -31,7 +31,7 @@
         crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/pouchdb@8.0.1/dist/pouchdb.min.js" defer></script>
     <script src="app.js" defer></script>
-    <script src="bootstrap.min.js" defer></script>
+    <script src="js/bootstrap.min.js" defer></script>
 </head>
 
 <body>
@@ -42,72 +42,75 @@
         <div class="row mt-4 justify-content-center">
             <div class="row">
                 <p class="mt-2">Busca algún recordatorio</p>
-                <div class="container mt-2">
+                <div class="col-12 col-lg-5 col-md-8 mt-2">
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="border-top border-bottom border-start input-group-text" id="search-icon">
                                 <i class="fas fa-search"></i>
                             </span>
                         </div>
-                        <input type="text" class="border-bottom border-top border-end form-control" placeholder="Buscar" aria-label="Buscar" aria-describedby="search-icon">
+                        <input type="text" class="border-bottom border-top border-end form-control" placeholder="Buscar"
+                            aria-label="Buscar" aria-describedby="search-icon">
                     </div>
-        
-                    <button type="button" class="btn btn-primary busqueda " data-bs-toggle="modal" data-bs-target="#nuevoRecordatorio">
+
+                    <button type="button" class=" mt-3 btn btn-primary busqueda " data-bs-toggle="modal"
+                        data-bs-target="#nuevoRecordatorio">
                         Nuevo Recordatorio
                     </button>
 
 
 
-                <div class="modal fade" id="nuevoRecordatorio" tabindex="-1" aria-labelledby="nuevoRecordatorio"
-                    aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h1 class="modal-title fs-5" id="exampleModalLabel">Añadí tu nota</h1>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                    aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
+                    <div class="modal fade" id="nuevoRecordatorio" tabindex="-1" aria-labelledby="nuevoRecordatorio"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h1 class="modal-title fs-5" id="exampleModalLabel">Añadí tu nota</h1>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
 
-                                <form action="" enctype="multipart/form-data" class="p-4">
-                                    <h2>Anotá tu recordatorio</h2>
-                                    <label for="nombre">Tarea</label>
-                                    <textarea id="tarea" class="form-control" rows="5" required></textarea>
-                                    <label class="mt-3 mb-3" for="nombre">¿Es de importancia su fecha
-                                        límite?</label>
-                                    <div class="d-flex justify-content-around flex-column">
-                                        <div class="divRadioTrue">
-                                            <input class="form-check-input" type="radio" name="importance"
-                                                id="trueRadio" value="True" required />
-                                            <label class="form-check-label" for="trueRadio">Sí</label>
+                                    <form action="" enctype="multipart/form-data" class="p-4">
+                                        <h2>Anotá tu recordatorio</h2>
+                                        <label for="nombre">Tarea</label>
+                                        <textarea id="tarea" class="form-control" rows="5" required></textarea>
+                                        <label class="mt-3 mb-3" for="nombre">¿Es de importancia su fecha
+                                            límite?</label>
+                                        <div class="d-flex justify-content-around flex-column">
+                                            <div class="divRadioTrue">
+                                                <input class="form-check-input" type="radio" name="importance"
+                                                    id="trueRadio" value="True" required />
+                                                <label class="form-check-label" for="trueRadio">Sí</label>
+                                            </div>
+                                            <div class="divRadioFalse">
+                                                <input class="form-check-input" type="radio" name="importance"
+                                                    id="falseRadio" value="False" required />
+                                                <label class="form-check-label" for="falseRadio">No</label>
+                                            </div>
                                         </div>
-                                        <div class="divRadioFalse">
-                                            <input class="form-check-input" type="radio" name="importance"
-                                                id="falseRadio" value="False" required />
-                                            <label class="form-check-label" for="falseRadio">No</label>
-                                        </div>
-                                    </div>
 
-                                    <label class="mt-3 mb-3" for="nombre">Imagen de referencia</label>
-                                    <input type="file" onchange="previewFile()" id="img_reference"
-                                        class="form-control mb-3" />
-                                    <img hidden src="" height="50%" width="50%" alt="" />
+                                        <label class="mt-3 mb-3" for="nombre">Imagen de referencia</label>
+                                        <input type="file" onchange="previewFile()" id="img_reference"
+                                            class="form-control mb-3" />
+                                        <img hidden src="" height="50%" width="50%" alt="" />
 
 
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                                <button type="submit" class="btn btn-primary">Guardar</button>
-                                </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cerrar</button>
+                                    <button type="submit" class="btn btn-primary">Guardar</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <div class="col-md-5 mt-5">
+                    <ul class="list-group" id="recordatorios"></ul>
+                </div>
             </div>
-            <div class="col-md-5 mt-5">
-                <ul class="list-group" id="recordatorios"></ul>
-            </div>
-        </div>
     </main>
     <footer class="bg-dark">
         <p class="text-white">DV | Aplicaciones Webs Progresivas | 2024</p>

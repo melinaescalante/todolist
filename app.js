@@ -93,6 +93,7 @@ form.addEventListener("submit", (e) => {
   renderizarRecordatorios(recordatorios);
 });
 let btns;
+let btns2;
 // Funcion 2 - Recibe un array y los renderiza las notas
 const renderizarRecordatorios = (lista) => {
   // Limpio el contenedor
@@ -122,8 +123,11 @@ const renderizarRecordatorios = (lista) => {
                         ${recordatorio.importanceType}
                     </div>
                 </div>
-
-                <button id="${index}" data-id2="${recordatorio._id}" class="btn btn-danger btn-delete" type="button">
+                
+                <button data-bs-toggle="modal" data-bs-target="#editRecordatorio"id="${index}" data-id2="${recordatorio._id}" class="m-1 btn btn-warning " type="button">
+                <i style="color:white;" class="fa-regular fa-pen-to-square"></i>
+                </button>
+                <button id="${index}" data-id2="${recordatorio._id}" class="m-1 btn btn-danger btn-delete" type="button">
                     X
                 </button>
             </div>
@@ -131,6 +135,7 @@ const renderizarRecordatorios = (lista) => {
   });
 
   btns = document.querySelectorAll(".btn-delete");
+  btns2 = document.querySelectorAll(".btn-warning");
   console.log(btns);
   btns.forEach((btn) => {
     btn.addEventListener("click", (e) => {
@@ -139,23 +144,27 @@ const renderizarRecordatorios = (lista) => {
       deleteRecordatorio(id, id2);
     });
   });
+  btns2.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      // const id = e.target.id;
+      let id2 = e.target.dataset.id2;
+      editRecordatorio(id2);
+    });
+  });
+
 };
 
-let datosViejos;
-let datosDB;
+let datosPouch;
 // Funcion 3 - Lee las notas del indexedDB
 const getNotas = async () => {
   try {
     const result = await db.allDocs({ include_docs: true, descending: true });
-    datosViejos = result.rows.map((row) => row.doc); // Extrae todos los documentos en un array
-    // console.log(result.rows);
-    datosDB = result.rows;
-    console.log(datosDB);
-    datosViejos.forEach((element) => {
+    datosPouch = result.rows.map((row) => row.doc); // Extrae todos los documentos en un array
+    datosPouch.forEach((element) => {
       recordatorios.push(element);
     });
 
-    renderizarRecordatorios(datosViejos);
+    renderizarRecordatorios(datosPouch);
   } catch (error) {
     console.error("Error al obtener las notas:", error);
   }
@@ -175,6 +184,50 @@ const deleteRecordatorio = (index, id2) => {
 const deleteObject = async (id) => {
   const doc = await db.get(id);
   await db.remove(doc);
+}
+const editRecordatorio = async (id) => {
+  try {
+
+    const doc = await db.get(id);
+    let modalDoc = `<div class="modal fade" id="editRecordatorio" tabindex="-1" aria-labelledby="editRecordatorio" aria-hidden="true">
+    <div class="modal-dialog">
+    <div class="modal-content">
+    <div class="modal-header">
+    <h1 class="modal-title fs-5" id="exampleModalLabel">Modifica tu recordatorio</h1>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+    <input value="${doc.body}"/>
+    <input type="datetime-local" value="${doc.fechaLimite}"/>
+    <input type="file"/>
+    <input/>
+    </div>
+    <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+    <button type="button" class="btn btn-primary">Save changes</button>
+    </div>
+    </div>
+    </div>
+    </div>`
+
+    const existingModal = document.getElementById('editRecordatorioModal');
+    if (existingModal) {
+      existingModal.parentNode.removeChild(existingModal);
+    }
+
+    // Insertar el modal en el DOM
+    document.body.insertAdjacentHTML('beforeend', modalDoc);
+
+  } catch (error) {
+
+  }
+
+  // doc.body = nota.body;
+  // doc.img = nota.img;
+  // doc.importanceType = nota.importanceType;
+  // doc.fechaLimite = nota.fechaLimite;
+
+  // await db.put(doc);
 }
 
 const renderError = (msg) => {
