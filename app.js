@@ -1,4 +1,5 @@
-// import { Modal } from 'bootstrap.min.js';
+import { guardarRecordatorioFirebase } from "./firebase.js";
+import { getStorage, ref } from "firebase/storage";
 const db = new PouchDB("recordatorios");
 // Selecciono los elementos
 const inputTarea = document.querySelector("#tarea");
@@ -58,7 +59,7 @@ const eventoRadios = (radios) => {
   });
 }
 // Funcion 1 - Leer los inputs y los pushea en array contactos
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
   let fechaMax = document.getElementById("datetime")
     ? document.getElementById("datetime").value
@@ -88,7 +89,7 @@ form.addEventListener("submit", (e) => {
     .catch((error) => {
       console.error(error);
     });
-
+  const id =await guardarRecordatorioFirebase(recordatorio);
   recordatorios.push(recordatorio);
 
   inputTarea.value = "";
@@ -292,6 +293,7 @@ function previewFile() {
     console.log(file);
   }
 }
+
 if( 'serviceWorker' in navigator  ){
   navigator.serviceWorker.register('js/sw.js');
 } else {
