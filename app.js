@@ -1,5 +1,5 @@
-import { guardarRecordatorioFirebase } from "./firebase.js";
-import { getStorage, ref } from "firebase/storage";
+import { guardarRecordatorioFirebase, getRecordatoriosFirebase } from "./firebase.js";
+
 const db = new PouchDB("recordatorios");
 // Selecciono los elementos
 const inputTarea = document.querySelector("#tarea");
@@ -16,8 +16,7 @@ let radioDivTrue = document.querySelector(".divRadioTrue");
 let radioDivFalse = document.querySelector(".divRadioFalse");
 
 let recordatorios = [];
-let imgReference = document.getElementById("#img_reference");
-let file;
+
 
 // Funcion que depende que radio pone se crea otro campo
 let existingDiv = null;
@@ -68,19 +67,13 @@ form.addEventListener("submit", async (e) => {
   const body = inputTarea.value;
   const fecha = new Date().toLocaleDateString();
   const idRandom = crypto.randomUUID();
-  let imgFileName;
-  // Si se seleccionó un archivo de imagen
-  if (file) {
-    imgFileName = file.name;
-  }
-
   const recordatorio = {
     _id: idRandom,
     fecha: fecha,
     fechaLimite: fechaMax ? fechaMax : "Sin fecha límite",
     body: body,
     importanceType: valorRadio ? "True" : "False",
-    img: imgFileName,
+
   };
   db.put(recordatorio)
     .then((resp) => {
@@ -116,11 +109,7 @@ const renderizarRecordatorios = (lista) => {
                     <div>
                     <i class="fa-regular fa-file-lines"></i> ${recordatorio.body}
                     </div>
-                    <div>
-                    <i class="fa-solid fa-camera"></i>
-                        ${recordatorio.img}
-                    </div>
-                    <div>
+                    
                     <i class="fa-solid fa-calendar text-danger"></i>
                         ${recordatorio.fechaLimite}
                     </div>
@@ -171,7 +160,7 @@ const renderizarRecordatorios = (lista) => {
     btn.addEventListener("click", (e) => {
       // const id = e.target.id;
       let id2 = e.target.dataset.id2;
-      editRecordatorio(id2);
+      // editRecordatorio(id2);
     });
   });
 
@@ -179,7 +168,7 @@ const renderizarRecordatorios = (lista) => {
 
 let datosPouch;
 // Funcion 3 - Lee las notas del indexedDB
-const getNotas = async () => {
+const getRecordatorios = async () => {
   try {
     const result = await db.allDocs({ include_docs: true, descending: true });
     datosPouch = result.rows.map((row) => row.doc); // Extrae todos los documentos en un array
@@ -267,35 +256,13 @@ const renderError = (msg) => {
                 ${msg}
     </div>`;
 };
-getNotas();
+getRecordatorios();
+getRecordatoriosFirebase()
 
 eventoRadios(radioInput);
 
-
-// Funcion de mozilla para previsualizar
-function previewFile() {
-  const preview = document.querySelector("img");
-  file = document.querySelector("input[type=file]").files[0];
-  const reader = new FileReader();
-
-  reader.addEventListener(
-    "load",
-    function () {
-      // convierte la imagen a una cadena en base64
-      preview.src = reader.result;
-      preview.hidden = false;
-    },
-    false
-  );
-
-  if (file) {
-    reader.readAsDataURL(file);
-    console.log(file);
-  }
-}
-
 if( 'serviceWorker' in navigator  ){
-  navigator.serviceWorker.register('js/sw.js');
+  navigator.serviceWorker.register('sw.js');
 } else {
   titulo.innerText = 'Lamentablemente tu navegador no soporta está tecnología'
 }

@@ -5,7 +5,9 @@ const appInterfaz = [
     'css/style.css',
     'css/bootstrap.min.css',
     'js/bootstrap.min.js',
-    'js/manifest.json',
+    'manifest.json',
+    'firebase.js',
+    'config.js',
     'app.js',
     'sw.js',
     'images/android-icon-36x36.png',
@@ -20,11 +22,12 @@ const appInterfaz = [
     'images/apple-icon-76x76.png',
     'images/apple-icon-114x114.png',
     'images/apple-icon-120x120.png',
+    'images/apple-icon-144x144.png',
     'images/apple-icon-152x152.png',
     'images/apple-icon-180x180.png',
     'images/apple-icon-precomposed.png',
     'images/apple-icon.png',
-    'images/browserconfig.xml',
+    'browserconfig.xml',
     'images/favicon-16x16.png',
     'images/favicon-32x32.png',
     'images/favicon-96x96.png',
@@ -36,29 +39,34 @@ const appInterfaz = [
     
 ]
 
-self.addEventListener('install', (evento)=> {
-    const cache =  caches.open(cacheName).then( cache => {
-        return cache.addAll( appInterfaz )
-    })
-    // Espero hasta que la promesa se resuleva
-    evento.waitUntil( cache );
+self.addEventListener('install', (evento) => {
+    console.error('Estoy en el sw');
+    
+    const cache = caches.open(cacheName).then(cache => {
+        console.error('falle');
+
+        return cache.addAll(appInterfaz);
+    });
+    // Espero hasta que la promesa se resuelva
+    evento.waitUntil(cache);
+});
+
+self.addEventListener('activate', (evento) => {
+console.log(appInterfaz)
 })
-// self.addEventListener('activate', (evento) => {
-//     console.log('SW activado  dds');
-// })
 
-// self.addEventListener('fetch', (evento) => {
-//     const respCache = caches.match(evento.request).then(res => {
-//         if (res) {
-//             return res;
-//         } else {
-//             return fetch(evento.request).then(repsNet => {
-//                 return repsNet
-//             })
-//         }
-//     })
+self.addEventListener('fetch', (evento) => {
+    const respCache = caches.match(evento.request).then(res => {
+        if (res) {
+            return res;
+        } else {
+            return fetch(evento.request).then(repsNet => {
+                return repsNet
+            })
+        }
+    })
 
 
-//     //console.log(respCache)
-//     evento.respondWith(respCache);
-// })
+    //console.log(respCache)
+    evento.respondWith(respCache);
+})

@@ -27,3 +27,20 @@ export const guardarRecordatorioFirebase = async ( recordatorio ) => {
         console.error(error);
     }
 }
+export const getRecordatoriosFirebase = async() =>{
+    const querySnapShot = await getDocs(  collection(db, 'recordatorio')  );
+    const data = [];
+    querySnapShot.forEach( doc => {
+        const { body, fecha, fechaLimite, importanceType } = doc.data();
+        data.push({
+            id: doc.id,
+            body,
+            fecha,
+            fechaLimite,
+            importanceType
+        })
+        
+    });
+    await console.log(data)
+    return data;
+}
