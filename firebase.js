@@ -31,7 +31,7 @@ export const guardarRecordatorioFirebase = async (recordatorio) => {
     try {
         const doc = await addDoc(collection(db, 'recordatorio'), recordatorio);
        
-        return doc.id;
+        // return doc.id;
     } catch (error) {
         console.error(error);
     }
@@ -47,7 +47,7 @@ export const getRecordatoriosFirebase = async () => {
                 body,
                 fecha,
                 fechaLimite,
-                importanceType
+                importanceType,
             })
 
         });

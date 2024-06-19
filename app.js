@@ -1,5 +1,6 @@
 import { guardarRecordatorioFirebase, getRecordatoriosFirebase, deleteRecordatorioFirebase } from "./firebase.js";
 
+const db = new PouchDB("recordatorios");
 // Selecciono los elementos
 const inputTarea = document.querySelector("#tarea");
 
@@ -15,14 +16,10 @@ let radioDivTrue = document.querySelector(".divRadioTrue");
 let radioDivFalse = document.querySelector(".divRadioFalse");
 
 let recordatorios = [];
-let db
+
 const inicializarApp = async () => {
-   db = new PouchDB("recordatorios");
   const data = await getRecordatoriosFirebase();
   data.forEach(dato => {
-    if (!dato._id) {
-      dato._id = dato.id
-        }
     db.put(dato)
       .then((resp) => {
         console.log(resp);
@@ -32,10 +29,10 @@ const inicializarApp = async () => {
         console.error(error);
       });
   });
+  recordatorios.push(data)
   await renderizarRecordatorios(data);
   console.log(data)
 };
-inicializarApp()
 // Funcion que depende que radio pone se crea otro campo
 let existingDiv = null;
 let valorRadio = null;
@@ -91,22 +88,24 @@ form.addEventListener("submit", async (e) => {
     fechaLimite: fechaMax ? fechaMax : "Sin fecha límite",
     body: body,
     importanceType: valorRadio ? "True" : "False",
-
   };
-  // db.put(recordatorio)
-  //   .then((resp) => {
-  //     console.log(resp);
-  //     console.log(recordatorio)
-  //   })
-  //   .catch((error) => {
-  //     console.error(error);
-  //   });
+  db.put(recordatorio)
+    .then((resp) => {
+      console.log(resp);
+      console.log(recordatorio)
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+  if (!recordatorio._id) {
+    recordatorio._id = recordatorio.id;
+  }
+  await guardarRecordatorioFirebase(recordatorio);
   recordatorios.push(recordatorio);
-  const id = await guardarRecordatorioFirebase(recordatorio);
   inputTarea.value = "";
 
   renderizarRecordatorios(recordatorios);
-  inicializarApp()
+  // inicializarApp()
 });
 let btns;
 let btns2;
@@ -196,56 +195,44 @@ const renderizarRecordatorios = (lista) => {
 let datosPouch;
 // Funcion 3 - Lee las notas del indexedDB
 const getRecordatorios = async () => {
-  
   try {
-    const info = await db.info();
-    
     let data_fb = await getRecordatoriosFirebase();
+    data_fb.forEach(recordatorio => {
+      console.log(recordatorio)
+      if (!recordatorio._id) {
+        recordatorio._id = recordatorio.id;
+      }
+      db.put(recordatorio)
+        .then((resp) => {
+          console.log(resp);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+    });
+
     const result = await db.allDocs({ include_docs: true, descending: true });
-    let datosPouch = result.rows.map((row) => row.doc); // Extrae todos los documentos en un array
-    // Combina los datos de Firebase y PouchDB en el array `recordatorios`
-    recordatorios = [...datosPouch, ...data_fb];
+
+    let datosPouch = result.rows.map((row) => row.doc);
+
+    // Combina los datos de Firebase y PouchDB en el array recordatorios
+    recordatorios = data_fb;
+
 
     renderizarRecordatorios(recordatorios);
-    console.log(info.doc_count === 0)
-    console.log(datosPouch)
-
-    // Guardar cada recordatorio en PouchDB si el indexed esta vacio
-    if (info.doc_count === 0) {
-      console.log("estoy vacio")
-      // data_fb.forEach(async (recordatorio) => {
-      //   console.log(data_fb)
-      //   try {
-      //     if (!recordatorio._id) {
-      //       recordatorio._id = recordatorio.id
-      //     }
-      //     // let estaendb=await db.get(recordatorio.id)
-      //     // console.log(estaendb)
-          
-      //     console.log(db._allDocs.length)
-
-      //     await db.put(recordatorio);
-      //     console.log(recordatorio)
-
-
-      //   } catch (error) {
-      //     console.error(error);
-      //   }
-      // });
-    }
   } catch (error) {
     console.error(error);
   }
 };
 
-// getRecordatorios();
+getRecordatorios();
 
 // Funcion 4 - Elimina un Nota
 const deleteRecordatorio = async (index, id2) => {
   try {
     // let id = recordatorios[index].id;
     await deleteRecordatorioFirebase(id2)
-    await deleteObject(recordatorios[index]);
+    // await deleteObject(recordatorios[index]);
     recordatorios.splice(index, 1);
     renderizarRecordatorios(recordatorios);
   } catch (error) {
@@ -254,16 +241,14 @@ const deleteRecordatorio = async (index, id2) => {
 };
 
 const deleteObject = async (recordatorio) => {
-  // if (!recordatorio._id) {
-  //   recordatorio._id = recordatorio.id
+  // if (!recordatorio.id) {
+  //   recordatorio.id = recordatorio.id
   //   console.log(recordatorio)
   // }
-  // console.log(recordatorio)
 
-  // let doc = await db.get(recordatorio);
-  // console.log(doc)
-  await db.destroy();
-  inicializarApp()
+  let doc = await db.get(recordatorio);
+  console.log(doc)
+  await db.remove(doc);
 }
 
 let modalDocBody
