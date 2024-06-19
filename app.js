@@ -1,4 +1,4 @@
-import { guardarRecordatorioFirebase, getRecordatoriosFirebase } from "./firebase.js";
+import { guardarRecordatorioFirebase, getRecordatoriosFirebase, deleteRecordatorioFirebase } from "./firebase.js";
 
 const db = new PouchDB("recordatorios");
 // Selecciono los elementos
@@ -17,7 +17,22 @@ let radioDivFalse = document.querySelector(".divRadioFalse");
 
 let recordatorios = [];
 
-
+const inicializarApp = async () => {
+  const data = await getRecordatoriosFirebase();
+  data.forEach(dato => {
+    db.put(dato)
+      .then((resp) => {
+        console.log(resp);
+        console.log(dato)
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  });
+  await renderizarRecordatorios(data);
+  console.log(data)
+};
+// inicializarApp()
 // Funcion que depende que radio pone se crea otro campo
 let existingDiv = null;
 let valorRadio = null;
@@ -60,13 +75,13 @@ const eventoRadios = (radios) => {
 // Funcion 1 - Leer los inputs y los pushea en array contactos
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  const idRandom = crypto.randomUUID();
   let fechaMax = document.getElementById("datetime")
     ? document.getElementById("datetime").value
     : "Sin fecha límite";
 
   const body = inputTarea.value;
   const fecha = new Date().toLocaleDateString();
-  const idRandom = crypto.randomUUID();
   const recordatorio = {
     _id: idRandom,
     fecha: fecha,
@@ -78,82 +93,96 @@ form.addEventListener("submit", async (e) => {
   db.put(recordatorio)
     .then((resp) => {
       console.log(resp);
+      console.log(recordatorio)
     })
     .catch((error) => {
       console.error(error);
     });
-  const id =await guardarRecordatorioFirebase(recordatorio);
   recordatorios.push(recordatorio);
 
+  const id = await guardarRecordatorioFirebase(recordatorio);
+
+
   inputTarea.value = "";
-  console.log(recordatorios);
+  // console.log(recordatorios);
   renderizarRecordatorios(recordatorios);
+  // inicializarApp()
 });
 let btns;
 let btns2;
 // Funcion 2 - Recibe un array y los renderiza las notas
 const renderizarRecordatorios = (lista) => {
   // Limpio el contenedor
-
+  let html = ""
   listaRecordatorios.innerHTML = "";
   lista.forEach((recordatorio, index) => {
-    listaRecordatorios.innerHTML += `
-        <li class="list-group-item">
-            <div class="d-flex justify-content-between">
+    html += `<li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
                 <div>
+                    <span class="d-block">
+                      <strong>Fecha de creación</strong>
+                    </span>
                     <span>
                         <i class="fa-solid fa-calendar"></i>
-                        <strong> ${recordatorio.fecha}</strong>
-                    </span>
+                        ${recordatorio.fecha}
+                      </span>
                     <br>
                     <div>
+                    <span class="d-block">
+                        <strong>Tarea</strong>
+                    </span>
                     <i class="fa-regular fa-file-lines"></i> ${recordatorio.body}
-                    </div>
-                    
-                    <i class="fa-solid fa-calendar text-danger"></i>
-                        ${recordatorio.fechaLimite}
-                    </div>
-                    <div>
-                        ${recordatorio.importanceType}
-                    </div>
-                </div>
-                <div>
-                
-                <button id="${index}" data-id2="${recordatorio._id}" style="height:100%;" class=" btn btn-danger btn-delete" type="button">
-                X
-                </button>
-                </div>
-            </div>
-        </li>
-        
-        `
+                    </div>`
+
+    if (recordatorio.fechaLimite !== "Sin fecha límite") {
+      html += `
+                  <div>
+                  <span class="d-block">
+                      <strong>  Fecha límite</strong>
+                    </span>
+                  <i class="fa-solid fa-calendar text-danger"></i>
+                  ${recordatorio.fechaLimite}
+                  </div>`
+    }
+    html += `</div>
+            <div class="flex justify-content-end">
+            <button id="${index}" data-id2="${recordatorio.id}" style="max-height:60px;" class=" btn btn-danger btn-delete" type="button">
+            X
+            </button>
+          </div>
+          </li>`
   });
-/* <button data-bs-toggle="modal" data-bs-target="#editRecordatorio"id="${index}" data-id2="${recordatorio._id}" class="m-1 btn btn-warning" style="height:100%;" type="button">
-                <i style="color:white;" class="fa-regular fa-pen-to-square"></i>
-                </button><div  hidden class="modal fade" id="editRecordatorio" tabindex="-1" aria-labelledby="editRecordatorio" aria-hidden="true">
-    <div class="modal-dialog">
-    <div class="modal-content">
-    <div class="modal-header">
-    <h1 class="modal-title fs-5" id="exampleModalLabel">Modifica tu recordatorio</h1>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-    </div>
-    <div class="modal-body">
-    
-    <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-    <button type="button" class="btn btn-primary">Save changes</button>
-    </div>
-    </div>
-    </div>
-    </div> */
+  listaRecordatorios.innerHTML = html
+
+  /* <button data-bs-toggle="modal" data-bs-target="#editRecordatorio"id="${index}" data-id2="${recordatorio._id}" class="m-1 btn btn-warning" style="height:100%;" type="button">
+                  <i style="color:white;" class="fa-regular fa-pen-to-square"></i>
+                  </button><div  hidden class="modal fade" id="editRecordatorio" tabindex="-1" aria-labelledby="editRecordatorio" aria-hidden="true">
+      <div class="modal-dialog">
+      <div class="modal-content">
+      <div class="modal-header">
+      <h1 class="modal-title fs-5" id="exampleModalLabel">Modifica tu recordatorio</h1>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+      
+      <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+      </div>
+      </div>
+      </div> */
   btns = document.querySelectorAll(".btn-delete");
   btns2 = document.querySelectorAll(".btn-warning");
   console.log(btns);
   btns.forEach((btn) => {
     btn.addEventListener("click", (e) => {
+      // id del boton, posicion
       const id = e.target.id;
+      // id del recordatorio
       let id2 = e.target.dataset.id2;
       deleteRecordatorio(id, id2);
+  
     });
   });
   btns2.forEach((btn) => {
@@ -163,48 +192,78 @@ const renderizarRecordatorios = (lista) => {
       // editRecordatorio(id2);
     });
   });
-
 };
-
+console.log(db)
 let datosPouch;
 // Funcion 3 - Lee las notas del indexedDB
 const getRecordatorios = async () => {
   try {
+    let data_fb = await getRecordatoriosFirebase();
     const result = await db.allDocs({ include_docs: true, descending: true });
-    datosPouch = result.rows.map((row) => row.doc); // Extrae todos los documentos en un array
-    datosPouch.forEach((element) => {
-      recordatorios.push(element);
-    });
+    let datosPouch = result.rows.map((row) => row.doc); // Extrae todos los documentos en un array
+// console.log(datosPouch)
+    // Combina los datos de Firebase y PouchDB en el array `recordatorios`
+    
+   recordatorios = [...datosPouch, ...data_fb];
 
-    renderizarRecordatorios(datosPouch);
+    renderizarRecordatorios(recordatorios);
+
+    // Guardar cada recordatorio en PouchDB si el indexed esta vacio
+   
+      recordatorios.forEach(async (recordatorio) => {
+        try {
+          if (!recordatorio._id) {
+            recordatorio._id =recordatorio.id
+          }
+          console.log(db.info.length)
+           if(db.info.length===0){
+            await db.put(recordatorio);
+            console.log(db);
+          }
+        } catch (error) {
+          console.error(error);
+        }
+      });
+    
   } catch (error) {
-    console.error("Error al obtener las notas:", error);
+    console.error(error);
   }
 };
 
+getRecordatorios();
+
 // Funcion 4 - Elimina un Nota
-const deleteRecordatorio = (index, id2) => {
+const deleteRecordatorio = async (index, id2) => {
   try {
-    let id = recordatorios[index]._id;
-    deleteObject(id);
+    // let id = recordatorios[index].id;
+    await deleteRecordatorioFirebase(id2)
+    // await deleteObject(recordatorios[index]);
     recordatorios.splice(index, 1);
     renderizarRecordatorios(recordatorios);
   } catch (error) {
     console.error(error);
   }
 };
-const deleteObject = async (id) => {
-  const doc = await db.get(id);
-  await db.remove(doc);
+
+const deleteObject = async (recordatorio) => {
+  if (!recordatorio._id) {
+    recordatorio._id =recordatorio.id 
+    console.log(recordatorio)
+  }
+  console.log(recordatorio)
+  
+  let doc = await db.get(recordatorio);
+  console.log(doc)
+  await db.remove(recordatorio);
 }
 
 let modalDocBody
 // let divCreated = document.getElementById("edit-action")
 // if ((divCreated==null)) {
-  // let atrribute= modalDocBody.getAttribute("hidden")
-  // console.log(atrribute)
-  // console.log("estoy")
-  // divCreated.innerHTML = ""
+// let atrribute= modalDocBody.getAttribute("hidden")
+// console.log(atrribute)
+// console.log("estoy")
+// divCreated.innerHTML = ""
 // }
 // const editRecordatorio = async (id) => {
 
@@ -216,7 +275,7 @@ let modalDocBody
 //     modalDocBody = document.querySelector("#editRecordatorio .modal-body")
 //     let form = document.createElement("div")
 //     form.setAttribute("id", "edit-action")
-//     form = `<label for="edit-body">Editá tu recordatorio</label>
+//     form = `< label for= "edit-body" > Editá tu recordatorio</label >
 //               <input  class="form-control" value="${doc.body}"/>
 //               <label class="mt-3 mb-3" for="nombre">¿Es de importancia su fecha
 //               límite?</label>
@@ -256,12 +315,12 @@ const renderError = (msg) => {
                 ${msg}
     </div>`;
 };
-getRecordatorios();
-getRecordatoriosFirebase()
+// getRecordatorios();
+// await getRecordatoriosFirebase()
 
 eventoRadios(radioInput);
 
-if( 'serviceWorker' in navigator  ){
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 } else {
   titulo.innerText = 'Lamentablemente tu navegador no soporta está tecnología'

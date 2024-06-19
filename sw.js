@@ -39,12 +39,8 @@ const appInterfaz = [
     
 ]
 
-self.addEventListener('install', (evento) => {
-    console.error('Estoy en el sw');
-    
+self.addEventListener('install', (evento) => {    
     const cache = caches.open(cacheName).then(cache => {
-        console.error('falle');
-
         return cache.addAll(appInterfaz);
     });
     // Espero hasta que la promesa se resuelva
