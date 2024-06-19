@@ -216,7 +216,7 @@ const getRecordatorios = async () => {
             recordatorio._id =recordatorio.id
           }
           console.log(db.info.length)
-           if(db.info.length===0){
+          if(db.info.length===0){
             await db.put(recordatorio);
             console.log(db);
           }
