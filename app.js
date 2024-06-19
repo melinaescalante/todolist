@@ -1,8 +1,9 @@
-import { guardarRecordatorioFirebase, getRecordatoriosFirebase, deleteRecordatorioFirebase } from "./firebase.js";
+import { guardarRecordatorioFirebase, getRecordatoriosFirebase, deleteRecordatorioFirebase, getRecordatorioFirebase } from "./firebase.js";
 
 const db = new PouchDB("recordatorios");
 // Selecciono los elementos
 const inputTarea = document.querySelector("#tarea");
+const inputTitulo = document.querySelector("#titulo");
 
 const form = document.querySelector("form");
 
@@ -75,20 +76,30 @@ const eventoRadios = (radios) => {
 // Funcion 1 - Leer los inputs y los pushea en array contactos
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  // Creamos recordatorio con los datos ingresados
   const idRandom = crypto.randomUUID();
   let fechaMax = document.getElementById("datetime")
     ? document.getElementById("datetime").value
     : "Sin fecha límite";
-
+  const title = inputTitulo.value
   const body = inputTarea.value;
   const fecha = new Date().toLocaleDateString();
   const recordatorio = {
-    _id: idRandom,
+    /*  _id: idRandom, */
     fecha: fecha,
     fechaLimite: fechaMax ? fechaMax : "Sin fecha límite",
+    title: title,
     body: body,
     importanceType: valorRadio ? "True" : "False",
   };
+  // Añadimos recordatorio al firebase
+  const id = await guardarRecordatorioFirebase(recordatorio);
+  // Asignamos el mismo id de firebase para el indexed db
+  recordatorio._id = id
+  recordatorio.id = id
+
+  console.log({ id })
+  // Añadimos recordatorio a indexed db
   db.put(recordatorio)
     .then((resp) => {
       console.log(resp);
@@ -100,59 +111,77 @@ form.addEventListener("submit", async (e) => {
   if (!recordatorio._id) {
     recordatorio._id = recordatorio.id;
   }
-  await guardarRecordatorioFirebase(recordatorio);
   recordatorios.push(recordatorio);
+  // Vaciamos inout
   inputTarea.value = "";
-
+  inputTitulo.value = "";
+  radioInput.value = "";
   renderizarRecordatorios(recordatorios);
   // inicializarApp()
 });
 let btns;
 let btns2;
+
 // Funcion 2 - Recibe un array y los renderiza las notas
 const renderizarRecordatorios = (lista) => {
   // Limpio el contenedor
   let html = ""
   listaRecordatorios.innerHTML = "";
   lista.forEach((recordatorio, index) => {
-    html += `<li class="list-group-item">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span class="d-block">
-                      <strong>Fecha de creación</strong>
-                    </span>
-                    <span>
-                        <i class="fa-solid fa-calendar"></i>
-                        ${recordatorio.fecha}
-                      </span>
-                    <br>
-                    <div>
-                    <span class="d-block">
-                        <strong>Tarea</strong>
-                    </span>
-                    <i class="fa-regular fa-file-lines"></i> ${recordatorio.body}
-                    </div>`
+    html += `<li class="list-group-item" >
+    <div class="d-flex justify-content-between align-items-center" id="${recordatorio.id}">
+    <div>
+    <span class="d-block">
+    <strong style="color:grey">Fecha de creación</strong>
+    </span>
+    <span>
+    <i class="fa-solid fa-calendar"></i>
+    ${recordatorio.fecha}
+    </span>
+    <br>
+    `
 
     if (recordatorio.fechaLimite !== "Sin fecha límite") {
       html += `
-                  <div>
-                  <span class="d-block">
-                      <strong>  Fecha límite</strong>
-                    </span>
-                  <i class="fa-solid fa-calendar text-danger"></i>
-                  ${recordatorio.fechaLimite}
-                  </div>`
+      <div>
+      <span class="d-block">
+      <strong>  Fecha límite</strong>
+      </span>
+      <i class="fa-solid fa-calendar text-danger"></i>
+      ${recordatorio.fechaLimite}
+      </div>`
     }
-    html += `</div>
-            <div class="flex justify-content-end">
-            <button id="${index}" data-id2="${recordatorio.id}" style="max-height:60px;" class=" btn btn-danger btn-delete" type="button">
-            X
+    html += `<div>
+    <span class="d-block">
+    <strong>Titulo</strong>
+    </span>
+    ${recordatorio.title}
+    </div></div>
+    
+    <div class="flex justify-content-end">
+    <button id="${index}" data-id2="${recordatorio.id}" style="max-height:60px;" class=" btn btn-danger btn-delete" type="button">
+    X
             </button>
-          </div>
-          </li>`
-  });
-  listaRecordatorios.innerHTML = html
+            </div>
+            </li>`
 
+      ;
+  });
+
+  listaRecordatorios.innerHTML = html
+  let htmlCollection = document.querySelectorAll("#recordatorios>li")
+
+
+  const array = Array.from(htmlCollection);
+
+  array.forEach(li => {
+    li.addEventListener("click", async(e) => {
+      let id= e.target.id
+      console.log(id)
+      const found= await getRecordatorioFirebase(id)
+      return found
+    })
+  });
   /* <button data-bs-toggle="modal" data-bs-target="#editRecordatorio"id="${index}" data-id2="${recordatorio._id}" class="m-1 btn btn-warning" style="height:100%;" type="button">
                   <i style="color:white;" class="fa-regular fa-pen-to-square"></i>
                   </button><div  hidden class="modal fade" id="editRecordatorio" tabindex="-1" aria-labelledby="editRecordatorio" aria-hidden="true">
@@ -197,11 +226,10 @@ let datosPouch;
 const getRecordatorios = async () => {
   try {
     let data_fb = await getRecordatoriosFirebase();
+    console.log(data_fb);
     data_fb.forEach(recordatorio => {
       console.log(recordatorio)
-      if (!recordatorio._id) {
-        recordatorio._id = recordatorio.id;
-      }
+      recordatorio._id = recordatorio.id;
       db.put(recordatorio)
         .then((resp) => {
           console.log(resp);
@@ -230,9 +258,10 @@ getRecordatorios();
 // Funcion 4 - Elimina un Nota
 const deleteRecordatorio = async (index, id2) => {
   try {
-    // let id = recordatorios[index].id;
+    let id = recordatorios[index]._id;
+    console.log(id)
     await deleteRecordatorioFirebase(id2)
-    // await deleteObject(recordatorios[index]);
+    await deleteObject(id);
     recordatorios.splice(index, 1);
     renderizarRecordatorios(recordatorios);
   } catch (error) {
@@ -241,11 +270,6 @@ const deleteRecordatorio = async (index, id2) => {
 };
 
 const deleteObject = async (recordatorio) => {
-  // if (!recordatorio.id) {
-  //   recordatorio.id = recordatorio.id
-  //   console.log(recordatorio)
-  // }
-
   let doc = await db.get(recordatorio);
   console.log(doc)
   await db.remove(doc);
@@ -309,8 +333,6 @@ const renderError = (msg) => {
                 ${msg}
     </div>`;
 };
-// getRecordatorios();
-// await getRecordatoriosFirebase()
 
 eventoRadios(radioInput);
 

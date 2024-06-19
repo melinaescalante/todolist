@@ -4,7 +4,16 @@ header {
     justify-content: center;
     align-items: center;
 }
-
+.azul{
+    background-color: #468C98;
+}
+.celeste{
+    background-color: #4d98c7;
+}
+button.mt-3.btn.celeste.busqueda.text-white:hover{
+    color: #4d98c7!important;
+    border: 1px solid #4d98c7!important;
+}
 main {
     min-height: 70vh;
 }
