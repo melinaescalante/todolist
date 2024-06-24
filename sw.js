@@ -51,18 +51,35 @@ self.addEventListener('activate', (evento) => {
 console.log(appInterfaz)
 })
 
-self.addEventListener('fetch', (evento) => {
-    const respCache = caches.match(evento.request).then(res => {
-        if (res) {
-            return res;
-        } else {
-            return fetch(evento.request).then(repsNet => {
-                return repsNet
-            })
-        }
-    })
+// self.addEventListener('fetch', (evento) => {
+//     const respCache = caches.match(evento.request).then(res => {
+//         if (res) {
+//             return res;
+//         } else {
+//             return fetch(evento.request).then(repsNet => {
+//                 return repsNet
+//             })
+//         }
+//     })
 
 
-    //console.log(respCache)
-    evento.respondWith(respCache);
-})
+//     //console.log(respCache)
+//     evento.respondWith(respCache);
+// })
+self.addEventListener('fetch', event => {
+    if (event.request.method === 'GET') {
+        const respuesta = fetch(event.request).then(respuestaNetwork => {
+            return caches.open('mi-cache-1').then(cache => {
+                cache.put(event.request, respuestaNetwork.clone());
+                return respuestaNetwork;
+            });
+        }).catch(error => {
+            return caches.match(event.request);
+        });
+
+        event.respondWith(respuesta);
+    } else {
+        // Si el método no es GET, simplemente continuamos con la solicitud sin intentar almacenarla en caché
+        event.respondWith(fetch(event.request));
+    }
+});

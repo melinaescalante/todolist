@@ -18,24 +18,9 @@ let radioDivFalse = document.querySelector(".divRadioFalse");
 
 let recordatorios = [];
 
-const inicializarApp = async () => {
-  const data = await getRecordatoriosFirebase();
-  data.forEach(dato => {
-    db.put(dato)
-      .then((resp) => {
-        console.log(resp);
-        console.log(dato)
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  });
-  recordatorios.push(data)
-  await renderizarRecordatorios(data);
-  console.log(data)
-};
 // Funcion que depende que radio pone se crea otro campo
 let existingDiv = null;
+
 let valorRadio = null;
 const eventoRadios = (radios) => {
 
@@ -97,8 +82,6 @@ form.addEventListener("submit", async (e) => {
   // Asignamos el mismo id de firebase para el indexed db
   recordatorio._id = id
   recordatorio.id = id
-
-  console.log({ id })
   // Añadimos recordatorio a indexed db
   db.put(recordatorio)
     .then((resp) => {
@@ -117,7 +100,7 @@ form.addEventListener("submit", async (e) => {
   inputTitulo.value = "";
   radioInput.value = "";
   renderizarRecordatorios(recordatorios);
-  // inicializarApp()
+
 });
 let btns;
 let btns2;
@@ -130,10 +113,13 @@ const renderizarRecordatorios = (lista) => {
   lista.forEach((recordatorio, index) => {
     html += `<li class="list-group-item" >
     <div class="d-flex justify-content-between align-items-center" id="${recordatorio.id}">
+    <div class="content">
+
     <div>
-    <span class="d-block">
-    <strong style="color:grey">Fecha de creación</strong>
-    </span>
+    <p class="fw-bold style="color:grey">Fecha de creación</p>
+    </div>
+ 
+
     <span>
     <i class="fa-solid fa-calendar"></i>
     ${recordatorio.fecha}
@@ -144,21 +130,22 @@ const renderizarRecordatorios = (lista) => {
     if (recordatorio.fechaLimite !== "Sin fecha límite") {
       html += `
       <div>
-      <span class="d-block">
-      <strong>  Fecha límite</strong>
+      <span class="d-block fw-bold">
+    Fecha límite
       </span>
       <i class="fa-solid fa-calendar text-danger"></i>
       ${recordatorio.fechaLimite}
       </div>`
     }
     html += `<div>
-    <span class="d-block">
-    <strong>Titulo</strong>
+    <span class="d-block fw-bold">
+Titulo
     </span>
     ${recordatorio.title}
     </div></div>
     
-    <div class="flex justify-content-end">
+    <div class="d-flex flex-column justify-content-end">
+  
     <button id="${index}" data-id2="${recordatorio.id}" style="max-height:60px;" class=" btn btn-danger btn-delete" type="button">
     X
             </button>
@@ -169,19 +156,51 @@ const renderizarRecordatorios = (lista) => {
   });
 
   listaRecordatorios.innerHTML = html
-  let htmlCollection = document.querySelectorAll("#recordatorios>li")
-
-
+  let htmlCollection = document.querySelectorAll("#recordatorios > li");
+  console.log(htmlCollection);
+  
   const array = Array.from(htmlCollection);
-
+  
   array.forEach(li => {
-    li.addEventListener("click", async(e) => {
-      let id= e.target.id
-      console.log(id)
-      const found= await getRecordatorioFirebase(id)
-      return found
-    })
+    li.addEventListener("click", async (e) => {
+      let id = e.target.id;  
+      const found = await getRecordatorioFirebase(id);
+      const foundDb = await db.get(id);
+  
+      // Verifica si ya esta el dic creado en el li
+      let existingDiv = li.querySelector(".recordatorio-details");
+      if (existingDiv) {
+        console.log(existingDiv);
+        existingDiv.remove();
+      } else {
+        // Creamos div donde irá la descripción
+        let div = document.createElement("div");
+        div.setAttribute("class", "recordatorio-details");
+  
+        let p = document.createElement("p");
+        let p2 = document.createElement("p");
+        p.innerText = "Descripción";
+        p.setAttribute("class", "fw-bold");
+        p.style.margin = "0px";
+  
+        p2.innerText = foundDb.body;
+  
+        div.appendChild(p);
+        div.appendChild(p2);
+  
+        // Selecciona el div .content dentro del li actual
+        let doc = li.querySelector(".content");
+        console.log(doc);
+        if (doc) {
+          doc.appendChild(div);
+        } else {
+          li.appendChild(div);
+        }
+      }
+    });
   });
+  
+  
   /* <button data-bs-toggle="modal" data-bs-target="#editRecordatorio"id="${index}" data-id2="${recordatorio._id}" class="m-1 btn btn-warning" style="height:100%;" type="button">
                   <i style="color:white;" class="fa-regular fa-pen-to-square"></i>
                   </button><div  hidden class="modal fade" id="editRecordatorio" tabindex="-1" aria-labelledby="editRecordatorio" aria-hidden="true">
@@ -202,7 +221,7 @@ const renderizarRecordatorios = (lista) => {
       </div> */
   btns = document.querySelectorAll(".btn-delete");
   btns2 = document.querySelectorAll(".btn-warning");
-  console.log(btns);
+
   btns.forEach((btn) => {
     btn.addEventListener("click", (e) => {
       // id del boton, posicion
@@ -226,7 +245,7 @@ let datosPouch;
 const getRecordatorios = async () => {
   try {
     let data_fb = await getRecordatoriosFirebase();
-    console.log(data_fb);
+
     data_fb.forEach(recordatorio => {
       console.log(recordatorio)
       recordatorio._id = recordatorio.id;
@@ -271,7 +290,7 @@ const deleteRecordatorio = async (index, id2) => {
 
 const deleteObject = async (recordatorio) => {
   let doc = await db.get(recordatorio);
-  console.log(doc)
+
   await db.remove(doc);
 }
 

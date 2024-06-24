@@ -17,7 +17,7 @@ button.mt-3.btn.celeste.busqueda.text-white:hover{
 main {
     min-height: 70vh;
 }
-
+#recordatorios li> p:last-of-type{color: aquamarine;}
 footer {
     height: 10vh;
     display: flex;
